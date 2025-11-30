@@ -1,0 +1,89 @@
+# -----------------------------------------
+# Python cache
+# -----------------------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# -----------------------------------------
+# Jupyter notebooks
+# -----------------------------------------
+notebooks/
+.ipynb_checkpoints/
+
+# -----------------------------------------
+# Data folders
+# -----------------------------------------
+data/raw/
+data/interim/
+data/external/
+# keep processed only if needed in container
+# data/processed/
+
+# -----------------------------------------
+# Models (optional)
+#models/
+
+# -----------------------------------------
+# Reports, docs
+# -----------------------------------------
+reports/
+docs/
+references/
+
+# -----------------------------------------
+# Local environment & secrets
+# -----------------------------------------
+.env
+*.env
+.env.*
+
+# -----------------------------------------
+# Poetry / virtualenvs
+# -----------------------------------------
+.venv/
+venv/
+ENV/
+env/
+pip-wheel-metadata/
+
+# -----------------------------------------
+# Git
+# -----------------------------------------
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# -----------------------------------------
+# Editors & OS trash
+# -----------------------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# -----------------------------------------
+# Build and distribution
+# -----------------------------------------
+build/
+dist/
+*.egg-info/
+*.egg
+
+# -----------------------------------------
+# Tests (optional: exclude if not needed in container)
+# -----------------------------------------
+tests/
+
+# -----------------------------------------
+# Configs that should NOT be in container
+# -----------------------------------------
+.pre-commit-config.yaml
+setup.cfg
+Makefile
+LICENSE
+README.md
+requirements.txt
