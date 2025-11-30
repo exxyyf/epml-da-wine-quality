@@ -1,5 +1,10 @@
-# Data
-/data/
+# -----------------------------
+# DATA (IGNORE RAW DATA, TRACK .DVC FILES)
+# -----------------------------
+data/*
+!data/*.dvc
+!data/**/*.dvc
+!data/**/.gitkeep
 
 # Mac OS-specific storage files
 .DS_Store
