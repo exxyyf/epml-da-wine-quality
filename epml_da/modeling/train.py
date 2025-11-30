@@ -67,8 +67,6 @@ def train(
 
     model = get_model(model_name)
 
-    # mlflow.set_experiment("binary-classification")
-    # with mlflow.start_run():
     logger.info(f"Training model: {model_name}")
     model.fit(X_train, y_train)
 
@@ -77,13 +75,6 @@ def train(
 
     logger.info(f"Metrics: {metrics}")
 
-    # Log metrics & model
-    # mlflow.log_params(model.get_params())
-    # mlflow.log_metrics(metrics)
-    # mlflow.sklearn.log_model(model, f"model_{model_name}")
-
-    # Save locally
-    # Path(output_dir).mkdir(parents=True, exist_ok=True)
     model_path = Path(output_dir) / f"{model_name}.pkl"
     joblib.dump(model, model_path)
 
