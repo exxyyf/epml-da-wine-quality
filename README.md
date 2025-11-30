@@ -2,6 +2,14 @@
 
 DS Project to  explore solutions and tools for experimenting
 
+## Main info
+
+```
+python==3.11
+poetry==2.2.1
+```
+Poetry is used as a main package manager
+
 ## Project Organization
 
 ```
