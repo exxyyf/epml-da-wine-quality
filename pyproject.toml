@@ -33,6 +33,7 @@ dependencies = [
     "typer",
     "seaborn (>=0.13.2,<0.14.0)",
     "pre-commit (>=4.5.0,<5.0.0)",
+    "xgboost (>=3.1.2,<4.0.0)",
 ]
 requires-python = "~=3.11.0"
 
