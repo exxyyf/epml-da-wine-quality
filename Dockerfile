@@ -40,17 +40,21 @@ WORKDIR /app
 # 6. Copy only dependency files first
 # -----------------------------
 COPY pyproject.toml poetry.lock* ./
+COPY LICENSE ./
+COPY README.md ./
 
 # -----------------------------
-# 7. Install dependencies
+# 7. Copy project code
+# -----------------------------
+    COPY epml_da ./epml_da
+    COPY models ./models
+
+# -----------------------------
+# 8. Install dependencies
 # -----------------------------
 RUN poetry install --no-interaction --no-ansi
 
-# -----------------------------
-# 8. Copy project code
-# -----------------------------
-COPY epml_da ./epml_da
-COPY models ./models
+
 
 # I am not sure what to do with data, might need to add processed later
 # COPY data/processed ./data/processed

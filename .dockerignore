@@ -84,6 +84,6 @@ tests/
 .pre-commit-config.yaml
 setup.cfg
 Makefile
-LICENSE
-README.md
+# LICENSE
+# README.md
 requirements.txt
