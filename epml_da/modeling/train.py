@@ -46,9 +46,9 @@ def evaluate(y_true, y_pred) -> dict:
 
 def get_model(model_name: str, params: dict):
     models = {
-        "rf": RandomForestClassifier(**params["model"]["rf"]),
-        "mlp": MLPClassifier(**params["model"]["mlp"]),
-        "lr": LogisticRegression(**params["model"]["lr"]),
+        "rf": RandomForestClassifier(**params),
+        "mlp": MLPClassifier(**params),
+        "lr": LogisticRegression(**params),
     }
 
     if model_name not in models:
