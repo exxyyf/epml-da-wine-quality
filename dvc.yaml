@@ -12,7 +12,7 @@ stages:
     outs:
       - ${train.output_dir}/${train.model_name}.pkl
     metrics:
-      - ${train.output_dir}/${train.model_name}_metrics.json:
+      - ${train.output_dir}/metrics.json:
           cache: false
     params:
       - train.data_path
