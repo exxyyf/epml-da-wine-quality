@@ -102,7 +102,7 @@ def train(
         )
 
         # ---- Save metrics.json for DVC ----
-        metrics_path = Path(output_dir) / f"{model_name}_metrics.json"
+        metrics_path = Path(output_dir) / "metrics.json"
         with open(metrics_path, "w") as f:
             json.dump(metrics, f, indent=4)
 
