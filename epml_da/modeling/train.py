@@ -80,7 +80,7 @@ def train(
     joblib.dump(model, model_path)
 
     logger.info(f"Model saved to {model_path}")
-    metrics_path = Path(output_dir) / f"{model_name}_metrics.json"
+    metrics_path = Path(output_dir) / "metrics.json"
     with open(metrics_path, "w") as f:
         json.dump(metrics, f, indent=4)
 
