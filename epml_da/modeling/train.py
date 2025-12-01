@@ -95,7 +95,11 @@ def train(
         logger.info(f"Model saved to {model_path}")
 
         # ---- Log model to MLflow as artifact ----
-        mlflow.sklearn.log_model(model, name=f"{model_name}_model")
+        mlflow.sklearn.log_model(
+            model,
+            name=f"{model_name}_model",
+            registered_model_name=f"wq-demo-{model_name}",
+        )
 
         # ---- Save metrics.json for DVC ----
         metrics_path = Path(output_dir) / f"{model_name}_metrics.json"
