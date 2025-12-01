@@ -2,7 +2,7 @@ schema: '2.0'
 stages:
   train:
     cmd: "python -m epml_da.modeling.train --data-path data/processed/dataset.csv
-      --target quality_binary --model-name rf --output-dir models\n"
+      --target quality_binary --model-name mlp --output-dir models\n"
     deps:
     - path: data/processed/dataset.csv
       hash: md5
@@ -15,15 +15,15 @@ stages:
     params:
       params.yaml:
         train.data_path: data/processed/dataset.csv
-        train.model_name: rf
+        train.model_name: mlp
         train.output_dir: models
         train.target: quality_binary
     outs:
-    - path: models/rf.pkl
+    - path: models/mlp.pkl
       hash: md5
-      md5: 0e9b9344b003235196f8ee882ce90b48
-      size: 2489865
-    - path: models/rf_metrics.json
+      md5: becf52343fcb99857238834a4555b6d3
+      size: 104584
+    - path: models/mlp_metrics.json
       hash: md5
-      md5: a92c0cda99fa883c494c8ec5226bc732
-      size: 111
+      md5: 1f97f0cb92e2094bf5b42207c95cb37f
+      size: 126
