@@ -1,7 +1,7 @@
 train:
   data_path: data/processed/dataset.csv
   target: quality_binary
-  model_name: rf
+  model_name: mlp
   output_dir: models
 
 model:
