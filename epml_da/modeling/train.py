@@ -78,6 +78,7 @@ def train(
 
         model_params = params["model"][model_name]
         model = get_model(model_name, model_params)
+        mlflow.log_params(model_params)
 
         df = load_data(data_path)
         X_train, X_test, y_train, y_test = split_data(df, target)
