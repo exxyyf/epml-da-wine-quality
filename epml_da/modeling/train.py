@@ -17,6 +17,7 @@ from sklearn.metrics import (
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from typer import Typer
+import yaml
 
 from epml_da.config import MODELS_DIR, PROCESSED_DATA_DIR
 
@@ -43,11 +44,11 @@ def evaluate(y_true, y_pred) -> dict:
     }
 
 
-def get_model(model_name: str):
+def get_model(model_name: str, params: dict):
     models = {
-        "rf": RandomForestClassifier(n_estimators=200, random_state=121212),
-        "mlp": MLPClassifier(hidden_layer_sizes=(64, 32), random_state=121212),
-        "lr": LogisticRegression(random_state=121212),
+        "rf": RandomForestClassifier(**params["model"]["rf"]),
+        "mlp": MLPClassifier(**params["model"]["mlp"]),
+        "lr": LogisticRegression(**params["model"]["lr"]),
     }
 
     if model_name not in models:
@@ -71,6 +72,12 @@ def train(
         mlflow.log_param("model_name", model_name)
         mlflow.log_param("data_path", str(data_path))
         mlflow.log_param("target", target)
+
+        with open("params.yaml") as f:
+            params = yaml.safe_load(f)
+
+        model_params = params["model"][model_name]
+        model = get_model(model_name, model_params)
 
         df = load_data(data_path)
         X_train, X_test, y_train, y_test = split_data(df, target)
