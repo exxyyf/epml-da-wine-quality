@@ -10,8 +10,8 @@ stages:
       size: 66896
     - path: epml_da/modeling/train.py
       hash: md5
-      md5: 3133fa99cd5abd7dfe7ccdec00f79192
-      size: 2298
+      md5: a9b7a5b2339e31e3bec21bfd5f2b6363
+      size: 2284
     params:
       params.yaml:
         train.data_path: data/processed/dataset.csv
@@ -23,7 +23,7 @@ stages:
       hash: md5
       md5: f09745daddb1ffee1e31cb3aa56b8315
       size: 1375
-    - path: models/lr_metrics.json
+    - path: models/metrics.json
       hash: md5
       md5: a39c08b4ceee2f3af2a3798c768db5eb
       size: 125
