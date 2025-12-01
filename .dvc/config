@@ -1,4 +1,6 @@
 [core]
-    remote = localstore
+    remote = models_local
 ['remote "localstore"']
     url = storage
+['remote "models_local"']
+    url = models_storage
