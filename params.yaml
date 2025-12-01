@@ -1,0 +1,5 @@
+train:
+  data_path: data/processed/dataset.csv
+  target: quality_binary
+  model_name: rf
+  output_dir: models

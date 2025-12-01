@@ -1,0 +1,21 @@
+stages:
+  train:
+    cmd: >
+      python -m epml_da.modeling.train
+      --data-path ${train.data_path}
+      --target ${train.target}
+      --model-name ${train.model_name}
+      --output-dir ${train.output_dir}
+    deps:
+      - epml_da/modeling/train.py
+      - ${train.data_path}
+    outs:
+      - ${train.output_dir}/${train.model_name}.pkl
+    metrics:
+      - ${train.output_dir}/${train.model_name}_metrics.json:
+          cache: false
+    params:
+      - train.data_path
+      - train.target
+      - train.model_name
+      - train.output_dir
