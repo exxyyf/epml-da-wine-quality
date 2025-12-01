@@ -1,7 +1,7 @@
 train:
   data_path: data/processed/dataset.csv
   target: quality_binary
-  model_name: lr
+  model_name: rf
   output_dir: models
 
 model:
@@ -16,6 +16,6 @@ model:
     min_samples_split: 2
 
   mlp:
-    hidden_layer_sizes: (64, 32)
+    hidden_layer_sizes: [64, 32]
     activation: relu
     max_iter: 300

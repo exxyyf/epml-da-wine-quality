@@ -62,9 +62,14 @@ def get_model(model_name: str, params: dict):
 def train(
     data_path: str = PROCESSED_DATA_DIR / "dataset.csv",
     target: str = "quality_binary",
-    model_name: str = "rf",
+    model_name: str | None = None,
     output_dir: str = MODELS_DIR,
 ):
+    with open("params.yaml") as f:
+        params = yaml.safe_load(f)
+
+    # if model name not passed, read from config
+    model_name = model_name or params["train"]["model_name"]
     # ---- MLflow experiment setup ----
     mlflow.set_experiment("wine-quality-demo")
 
