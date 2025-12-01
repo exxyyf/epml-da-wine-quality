@@ -3,6 +3,8 @@ from pathlib import Path
 
 import joblib
 from loguru import logger
+import mlflow
+import mlflow.sklearn
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
@@ -45,9 +47,7 @@ def get_model(model_name: str):
     models = {
         "rf": RandomForestClassifier(n_estimators=200, random_state=121212),
         "mlp": MLPClassifier(hidden_layer_sizes=(64, 32), random_state=121212),
-        "lr": LogisticRegression(
-            random_state=121212,
-        ),
+        "lr": LogisticRegression(random_state=121212),
     }
 
     if model_name not in models:
@@ -63,26 +63,48 @@ def train(
     model_name: str = "rf",
     output_dir: str = MODELS_DIR,
 ):
-    df = load_data(data_path)
-    X_train, X_test, y_train, y_test = split_data(df, target)
+    # ---- MLflow experiment setup ----
+    mlflow.set_experiment("wine-quality-demo")
 
-    model = get_model(model_name)
+    with mlflow.start_run(run_name=f"{model_name}_run"):
 
-    logger.info(f"Training model: {model_name}")
-    model.fit(X_train, y_train)
+        mlflow.log_param("model_name", model_name)
+        mlflow.log_param("data_path", str(data_path))
+        mlflow.log_param("target", target)
 
-    y_pred = model.predict(X_test)
-    metrics = evaluate(y_test, y_pred)
+        df = load_data(data_path)
+        X_train, X_test, y_train, y_test = split_data(df, target)
 
-    logger.info(f"Metrics: {metrics}")
+        model = get_model(model_name)
 
-    model_path = Path(output_dir) / f"{model_name}.pkl"
-    joblib.dump(model, model_path)
+        logger.info(f"Training model: {model_name}")
+        model.fit(X_train, y_train)
 
-    logger.info(f"Model saved to {model_path}")
-    metrics_path = Path(output_dir) / "metrics.json"
-    with open(metrics_path, "w") as f:
-        json.dump(metrics, f, indent=4)
+        y_pred = model.predict(X_test)
+        metrics = evaluate(y_test, y_pred)
+
+        logger.info(f"Metrics: {metrics}")
+
+        # Log metrics to MLflow
+        for k, v in metrics.items():
+            mlflow.log_metric(k, v)
+
+        # ---- Save model to local filesystem (for DVC) ----
+        model_path = Path(output_dir) / f"{model_name}.pkl"
+        joblib.dump(model, model_path)
+        logger.info(f"Model saved to {model_path}")
+
+        # ---- Log model to MLflow as artifact ----
+        mlflow.sklearn.log_model(model, artifact_path=f"{model_name}_model")
+
+        # ---- Save metrics.json for DVC ----
+        metrics_path = Path(output_dir) / f"{model_name}_metrics.json"
+        with open(metrics_path, "w") as f:
+            json.dump(metrics, f, indent=4)
+
+        mlflow.log_artifact(str(metrics_path))
+
+        logger.info(f"Metrics saved to {metrics_path}")
 
 
 if __name__ == "__main__":
