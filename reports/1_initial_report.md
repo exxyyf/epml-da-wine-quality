@@ -40,6 +40,13 @@ poetry env info
 
 ![poetry env info](figures/poetry%20env%20info.png)
 
+### Фиксация зависимостей Poetry
+
+По умолчанию Poetry формирует файл pyproject.toml и poetry.lock. С помощью этих файлов Poetry может установить требуемые версии библиотек в новый проект.
+
+Для дополнительной фиксации версий был создан файл requirements.txt, который можно использовать с другими менеджерами пакетов.
+
+
 ## Настройка Git репозитория
 
 На удаленном хосте github.com был создан репозиторий проекта
@@ -119,134 +126,8 @@ pre-commit run --all-files
 2. Далее был создан файл .dockerignore, в который включены файлы ноутбуков, окружений, переменных и тд.
 3. После этого создан файл Dockerignore.
 
-```yaml
-# -----------------------------
+Актуальный [Dockerfile](Dockerfile)
 
-# 1. Base image
-
-# -----------------------------
-
-FROM python:3.11-slim AS base
-
-
-
-ENV PYTHONDONTWRITEBYTECODE=1
-
-ENV PYTHONUNBUFFERED=1
-
-
-
-# -----------------------------
-
-# 2. System deps
-
-# -----------------------------
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-
-curl \
-
-build-essential \
-
-git \
-
-&& rm -rf /var/lib/apt/lists/*
-
-
-
-# -----------------------------
-
-# 3. Install Poetry
-
-# I have matched this to my project Poetry version
-
-# -----------------------------
-
-ENV POETRY_VERSION=2.2.1
-
-RUN curl -sSL https://install.python-poetry.org | python3 -
-
-
-
-# Poetry will be installed into /root/.local/bin
-
-ENV PATH="/root/.local/bin:$PATH"
-
-
-
-# -----------------------------
-
-# 4. Disable Poetry virtualenvs
-
-# Dependencies installed directly into system Python of the container
-
-# -----------------------------
-
-RUN poetry config virtualenvs.create false
-
-
-
-# -----------------------------
-
-# 5. Set workdir
-
-# -----------------------------
-
-WORKDIR /app
-
-
-
-# -----------------------------
-
-# 6. Copy only dependency files first
-
-# -----------------------------
-
-COPY pyproject.toml poetry.lock* ./
-
-COPY LICENSE ./
-
-COPY README.md ./
-
-
-
-# -----------------------------
-
-# 7. Copy project code
-
-# -----------------------------
-
-COPY epml_da ./epml_da
-
-COPY models ./models
-
-
-
-# -----------------------------
-
-# 8. Install dependencies
-
-# -----------------------------
-
-RUN poetry install --no-interaction --no-ansi
-
-
-
-
-# I am not sure what to do with data, might need to add processed later
-
-# COPY data/processed ./data/processed
-
-
-
-# -----------------------------
-
-# 9. Default command is calling model to predict
-
-# -----------------------------
-
-CMD ["python", "-m", "epml_da.modeling.predict"]
-```
 
 - При создании Dockerfile я руководствовалась тем, что мой проект создан под python 3.11.
 
@@ -256,13 +137,14 @@ CMD ["python", "-m", "epml_da.modeling.predict"]
 
 - Далее я скопировала файлы лицензии и ридми - не думала, что их нужно копировать, но они зафиксированы в pyproject.toml, без них не собирался образ, поэтому я их тоже указала.
 
-- Следующим шагом скопировала код проекта (самого модуля) и модели.
+- Следующим шагом скопировала код модуля – без него Poetry не сможет успешно установить зависимости.
 
-- Установила все пакеты через Poetry
+- Далее установила все пакеты через Poetry
+
+- После этого скопировала весь код проекта
 
 - Для основной команды при запуске моего контейнера выбрала запуск предсказания модели. Кажется, это адекватный смысл использования контейнеризированного проекта. Были мысли еще запустить юпитерлаб, но остановилась на этом.
 
-- Возник вопрос, что делать с данными для предсказания. По идее, они должны быть в data/processed, и наверно их тоже нужно включать в образ? Либо как-то еще добавлять, указывать путь, делать для этого команду в CLI. Честно, здесь затрудняюсь.
 
 Итог:
 
