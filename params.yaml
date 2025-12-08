@@ -1,21 +1,22 @@
 train:
   data_path: data/processed/processed_data.csv
   target: quality_binary
-  model_name: mlp
+  model_name: rf
   output_dir: models
 
 model:
   lr:
     C: 1.0
-    max_iter: 200
+    max_iter: 1000
     penalty: l2
+    class_weight: balanced
 
   rf:
-    n_estimators: 200
-    max_depth: 6
+    n_estimators: 500
+    max_depth: Null
     min_samples_split: 2
 
   mlp:
-    hidden_layer_sizes: [64, 32]
+    hidden_layer_sizes: [100, ]
     activation: relu
-    max_iter: 300
+    max_iter: 1000
