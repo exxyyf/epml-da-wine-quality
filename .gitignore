@@ -1,5 +1,7 @@
 # Data
-/data/
+*.csv
+*.xlsx
+*.parquet
 !.dvc
 !data.dvc
 # Mac OS-specific storage files
