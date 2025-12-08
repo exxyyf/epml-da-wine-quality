@@ -59,3 +59,79 @@ Poetry is used as a main package manager
 ```
 
 --------
+
+## Instructions
+
+### Data Versioning
+As a data versioning system DVC is used.
+To execute a data preprocess pipeline
+
+```
+dvc repro preprocess_data
+```
+
+Pipelines performs this
+
+```
+dvc stage add -n preprocess_data \
+	-d data/raw/WineQT.csv \
+	-o data/processed/processed_data.csv \
+	python -m epml_da.dataset
+```
+
+After preprocessing with new parameters we commit changes to dvc and to git
+Since autostaging is enabled, we only have to commit to git and then push to dvc
+
+```
+git add .
+git commit -m "New processing"
+dvc push
+```
+
+### Models Versioning
+
+As a models versioning system Mlflow is used.
+
+To launch interface in separate terminal do
+
+```
+mlflow ui
+```
+
+Experiments with models can be performed with
+
+```
+python -m epml_da.modeling.train
+```
+Parameters for models have to be adjusted using params.yaml
+
+### Version Comparison
+
+To compare different models we use either mlflow ui or custom system.
+
+Custom system with Dashboard for model versions comparison is launched in two stages.
+
+First stage:
+
+- Set model name in model_version.yaml
+- Fetch model versions with ```python -m epml_da.modeling.fetch_model_versions```
+
+Second stage:
+
+- In separate terminal run ```streamlit run epml_da/modeling/mv_dashboard.py```
+
+## Docker
+
+You can build a Docker image from Dockerfile using
+
+```
+docker build -t epml_da .
+```
+
+Then to run a container
+
+```
+docker run epml_da
+```
+
+By default model.train is executed and metrics are stored.
