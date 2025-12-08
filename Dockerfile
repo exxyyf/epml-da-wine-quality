@@ -44,20 +44,21 @@ COPY LICENSE ./
 COPY README.md ./
 
 # -----------------------------
-# 7. Copy project code
+# 7. Copy module code
+# Poetry cannot install all packages without this module
+# This is why I copy epml_da before installing dependencies
 # -----------------------------
-    COPY epml_da ./epml_da
-    COPY models ./models
+COPY epml_da ./epml_da
 
 # -----------------------------
 # 8. Install dependencies
 # -----------------------------
 RUN poetry install --no-interaction --no-ansi
 
-
-
-# I am not sure what to do with data, might need to add processed later
-# COPY data/processed ./data/processed
+# -----------------------------
+# 9. Copy project code
+# -----------------------------
+COPY . .
 
 # -----------------------------
 # 9. Default command is calling model to predict
