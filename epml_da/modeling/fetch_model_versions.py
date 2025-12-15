@@ -1,52 +1,58 @@
+import argparse
+from pathlib import Path
+
 from loguru import logger
 import mlflow
 import pandas as pd
-import yaml
-
-
-def load_model_name(config_path: str) -> str:
-    """Loading model_version.yaml"""
-    with open(config_path, "r") as f:
-        config = yaml.safe_load(f)
-    if isinstance(config, dict) and "model" in config:
-        return config["model"]["name"]
-    elif "name" in config:
-        return config["name"]
-    else:
-        raise ValueError("model name not found in config file")
 
 
 def fetch_model_versions(model_name: str) -> pd.DataFrame:
     client = mlflow.tracking.MlflowClient()
-    versions = client.search_model_versions(f"name='{model_name}'")
+
+    try:
+        versions = client.search_model_versions(f"name='{model_name}'")
+    except Exception as e:
+        raise RuntimeError(f"Failed to fetch versions for model '{model_name}': {e}")
 
     records = []
+
     for v in versions:
-        run_id = v.run_id
-        run = client.get_run(run_id)
+        run = client.get_run(v.run_id)
 
-        metrics = run.data.metrics
-        params = run.data.params
+        record = {
+            "model_name": model_name,
+            "version": int(v.version),
+            "stage": v.current_stage,
+            "run_id": v.run_id,
+        }
 
-        records.append(
-            {
-                "version": v.version,
-                "stage": v.current_stage,
-                "run_id": run_id,
-                "accuracy": metrics.get("accuracy"),
-                "precision": metrics.get("precision"),
-                "recall": metrics.get("recall"),
-                "f1": metrics.get("f1"),
-                **params,
-            }
-        )
+        record.update({f"metric_{k}": v for k, v in run.data.metrics.items()})
+        record.update({f"param_{k}": v for k, v in run.data.params.items()})
 
-    return pd.DataFrame(records)
+        records.append(record)
+
+    df = pd.DataFrame(records)
+    return df.sort_values("version")
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--model-name", required=True, help="Registered MLflow model name"
+    )
+    parser.add_argument("--output", default="models/model_versions.csv")
+
+    args = parser.parse_args()
+
+    logger.info(f"Fetching versions for model: {args.model_name}")
+    df = fetch_model_versions(args.model_name)
+
+    output_path = Path(args.output)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(output_path, index=False)
+
+    logger.info(f"Saved model versions to {output_path.resolve()}")
 
 
 if __name__ == "__main__":
-    model_name = load_model_name("model_version.yaml")
-    logger.info(f"Loaded model {model_name}")
-    df = fetch_model_versions(model_name)
-    logger.info(f"Fetched model info for {model_name}")
-    df.to_csv("models/model_versions.csv", index=False)
+    main()
