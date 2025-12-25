@@ -1,13 +1,10 @@
-from functools import wraps
-import json
 from pathlib import Path
 import random
-from typing import Callable
 
+from clearml import Task
+from clearml.model import OutputModel
 import joblib
 from loguru import logger
-import mlflow
-import mlflow.sklearn
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
@@ -21,7 +18,6 @@ import yaml
 from epml_da.config import MODELS_DIR, PROCESSED_DATA_DIR
 
 PATH_TO_PARAMS = "params.yaml"
-
 app = Typer()
 
 # ==========================
@@ -32,46 +28,6 @@ app = Typer()
 def set_seed(seed: int = 121212):
     random.seed(seed)
     np.random.seed(seed)
-
-
-# ==========================
-# MLflow utilities
-# ==========================
-
-
-def train_run_name(
-    path_to_params_config: str = PATH_TO_PARAMS,
-) -> str:
-    with open(path_to_params_config) as f:
-        params = yaml.safe_load(f)
-    model_name = params["train"]["model_name"]
-    if model_name is not None:
-        return f"{model_name}"
-
-
-def mlflow_run(
-    experiment_name: str,
-    run_name_fn: Callable[..., str] | None = None,
-):
-    """
-    MLflow decorator with auto-generated run_name from function arguments.
-    """
-
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            mlflow.set_experiment(experiment_name)
-            run_name = (
-                f"{func.__name__}-{run_name_fn()}"
-                if run_name_fn is not None
-                else func.__name__
-            )
-            with mlflow.start_run(run_name=run_name):
-                return func(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
 
 
 # ==========================
@@ -113,8 +69,7 @@ MODEL_REGISTRY = {
 def get_model(model_name: str, params: dict):
     if model_name not in MODEL_REGISTRY:
         raise ValueError(f"Unknown model: {model_name}")
-    ModelClass = MODEL_REGISTRY[model_name]
-    return ModelClass(**params)
+    return MODEL_REGISTRY[model_name](**params)
 
 
 # ==========================
@@ -123,10 +78,6 @@ def get_model(model_name: str, params: dict):
 
 
 @app.command()
-@mlflow_run(
-    experiment_name="wine-quality-exp-baseline-models",
-    run_name_fn=train_run_name,
-)
 def train(
     data_path: str = str(PROCESSED_DATA_DIR / "processed_data.csv"),
     target: str = "quality_binary",
@@ -135,71 +86,115 @@ def train(
     seed: int = 121212,
 ):
     """
-    Train a model and log parameters, metrics and artifacts to MLflow.
+    Train a model and track everything with ClearML
     """
 
-    # ---- Reproducibility ----
-    set_seed(seed)
-    mlflow.log_param("seed", seed)
+    # ==========================
+    # 1. ClearML Task
+    # ==========================
+    task = Task.init(
+        project_name="Wine Quality Prediction",
+        task_name="baseline-model-training",
+        task_type=Task.TaskTypes.training,
+    )
 
+    task.set_tags(["sklearn", "baseline"])
+    logger_clearml = task.get_logger()
+
+    # ==========================
+    # 2. Params
+    # ==========================
     with open(PATH_TO_PARAMS) as f:
         params = yaml.safe_load(f)
 
     model_name = model_name or params["train"]["model_name"]
 
-    # ---- General MLflow metadata ----
-    mlflow.log_param("model_name", model_name)
-    mlflow.log_param("data_path", data_path)
-    mlflow.log_param("target", target)
+    config = {
+        "seed": seed,
+        "data_path": data_path,
+        "target": target,
+        "model_name": model_name,
+        "model_params": params["model"][model_name],
+    }
 
-    mlflow.set_tag("model_type", model_name)
-    mlflow.set_tag("framework", "sklearn")
-    mlflow.set_tag("stage", "training")
+    task.connect(config)
 
-    model_params = params["model"][model_name]
-    mlflow.log_params(model_params)
+    set_seed(seed)
 
-    # ---- Data ----
+    # ==========================
+    # 3. Data
+    # ==========================
     df = load_data(data_path)
     X_train, X_test, y_train, y_test = split_data(df, target)
 
-    # ---- Model ----
-    model = get_model(model_name, model_params)
+    # ==========================
+    # 4. Model
+    # ==========================
+    model = get_model(model_name, config["model_params"])
     logger.info(f"Training model: {model_name}")
     model.fit(X_train, y_train)
 
-    # ---- Evaluation ----
+    # ==========================
+    # 5. Evaluation
+    # ==========================
     y_pred = model.predict(X_test)
     metrics = evaluate(y_test, y_pred)
+
     logger.info(f"Metrics: {metrics}")
 
     for k, v in metrics.items():
-        mlflow.log_metric(k, v)
+        logger_clearml.report_scalar(
+            title="metrics",
+            series=k,
+            value=v,
+            iteration=0,
+        )
 
-    # ---- Save artifacts ----
+    # ==========================
+    # 6. Save artifacts
+    # ==========================
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    run_id = mlflow.active_run().info.run_id
-
-    model_path = output_dir / f"{model_name}_{run_id}.pkl"
+    model_path = output_dir / f"{model_name}.pkl"
     joblib.dump(model, model_path)
-    mlflow.log_artifact(model_path)
 
-    # ---- Log MLflow model ----
-    mlflow.sklearn.log_model(
-        model,
-        name=f"{model_name}_model",
-        registered_model_name=f"wq-demo-{model_name}",
+    task.upload_artifact(
+        name="model_pickle",
+        artifact_object=model_path,
     )
 
-    # ---- Save metrics.json ----
-    metrics_path = output_dir / f"metrics_{run_id}.json"
-    with open(metrics_path, "w") as f:
-        json.dump(metrics, f, indent=4)
-    mlflow.log_artifact(metrics_path)
+    # ==========================
+    # 7. Model registry & versioning
+    # ==========================
+    output_model = OutputModel(
+        task=task,
+        name=f"wine-quality-{model_name}",
+        framework="sklearn",
+        tags=[
+            "wine-quality",
+            "classification",
+            model_name,
+        ],
+    )
 
-    logger.info("Training and logging finished successfully")
+    output_model.update_weights(
+        weights_filename=str(model_path),
+        auto_delete_file=False,
+    )
+
+    # ==========================
+    # 8. Model metadata (ВАЖНО: по одному ключу)
+    # ==========================
+    output_model.set_metadata("model_name", model_name)
+    output_model.set_metadata("dataset", "wine-quality")
+    output_model.set_metadata("task", "classification")
+    output_model.set_metadata("target", target)
+
+    for metric_name, metric_value in metrics.items():
+        output_model.set_metadata(metric_name, metric_value)
+
+    logger.info("Training finished and tracked with ClearML")
 
 
 if __name__ == "__main__":

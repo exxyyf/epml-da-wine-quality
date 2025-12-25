@@ -1,7 +1,7 @@
 train:
   data_path: data/processed/processed_data.csv
   target: quality_binary
-  model_name: rf
+  model_name: mlp
   output_dir: models
   seed: 121212
 
@@ -9,18 +9,18 @@ model:
   lr:
     C: 1.0
     max_iter: 1000
-    penalty: l1
-    class_weight: null
-    solver: saga
+    penalty: l2
+    class_weight: balanced
+    solver: lbfgs
 
   rf:
     n_estimators: 1500
-    max_depth: 15
+    max_depth: Null
     min_samples_split: 2
     random_state: 42
 
   mlp:
     hidden_layer_sizes: [100, 50, 10]
-    activation: logistic
+    activation: relu
     max_iter: 1000
     random_state: 42
