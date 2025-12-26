@@ -4,6 +4,6 @@
 
 DS Project to  explore solutions and tools for experimenting
 
-## Commands
+[Installation](installation.md)
 
-The Makefile contains the central entry points for common tasks related to this project.
+[Usage](usage.md)
