@@ -1,0 +1,14 @@
+schema: '2.0'
+stages:
+  preprocess_data:
+    cmd: python -m epml_da.dataset
+    deps:
+    - path: data/raw/WineQT.csv
+      hash: md5
+      md5: e2e57e4c41e6ee0213fb12e5a70f4bfb
+      size: 78057
+    outs:
+    - path: data/processed/processed_data.csv
+      hash: md5
+      md5: 34e518fbcff9a0d7374e4c3741614a53
+      size: 66896

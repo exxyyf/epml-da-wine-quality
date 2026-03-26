@@ -61,6 +61,6 @@ RUN poetry install --no-interaction --no-ansi
 COPY . .
 
 # -----------------------------
-# 9. Default command is calling model to predict
+# 9. Default command is calling model to train
 # -----------------------------
-CMD ["python", "-m", "epml_da.modeling.predict"]
+CMD ["python", "-m", "epml_da.modeling.train"]

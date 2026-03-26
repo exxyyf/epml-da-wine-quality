@@ -1,5 +1,14 @@
 # Data
-/data/
+*.csv
+*.xlsx
+*.parquet
+!.dvc
+!data.dvc
+
+# Mlflow
+mlruns/
+models/
+mlflow.db
 
 # Mac OS-specific storage files
 .DS_Store

@@ -1,0 +1,7 @@
+stages:
+  preprocess_data:
+    cmd: python -m epml_da.dataset
+    deps:
+    - data/raw/WineQT.csv
+    outs:
+    - data/processed/processed_data.csv
